@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulario de Paciente</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>Datos del Paciente y Agendamiento</h1>
+    </header>
+
+    <main>
+        <!-- Formulario de Datos del Paciente -->
+        <section class="openPatientForm">
+            <form id="patientForm">
+                <div class="input-container">
+                    <label for="name">Nombre:</label>
+                    <input type="text" id="name" required>
+                </div>
+                <div class="input-container">
+                    <label for="date">Fecha de nacimiento:</label>
+                    <input type="date" id="date" required oninput="calculateAge()">
+                </div>
+                <div class="input-container">
+                    <label for="age">Edad:</label>
+                    <input type="number" id="age" required readonly>
+                </div>
+                <div class="input-container">
+                    <label for="phone">Teléfono:</label>
+                    <input type="tel" id="phone" required>
+                </div>
+                <div class="input-container">
+                    <label for="email">Correo Electrónico:</label>
+                    <input type="email" id="email" required>
+                </div>
+                <div class="input-container">
+                    <label for="insurance">Nombre del Seguro Médico:</label>
+                    <input type="text" id="insurance" required>
+                </div>
+                <div class="input-container">
+                    <label for="insuranceNumber">Número del Seguro Médico:</label>
+                    <input type="text" id="insuranceNumber" required>
+                </div>
+                <div class="input-container">
+                    <label for="doctor">Doctor para la cita:</label>
+                    <select id="doctor" required>
+                        <option value="Dr. Juan Pérez">Dr. Juan Pérez</option>
+                        <option value="Dra. Ana López">Dra. Ana López</option>
+                        <option value="Dr. Carlos García">Dr. Carlos García</option>
+                    </select>
+                </div>
+                <div class="input-container">
+                    <label for="appointmentDate">Fecha de la Cita:</label>
+                    <input type="date" id="appointmentDate" required>
+                </div>
+                <div class="input-container">
+                    <label for="time">Hora de la Cita:</label>
+                    <input type="time" id="time" required>
+                </div>
+                <button type="submit">Agendar Cita</button>
+            </form>
+        </section>
+    </main>
+
+    <footer>
+        <p>Software para Kim &copy; 2024</p>
+    </footer>
+
+    <script>
+        // Función para calcular la edad
+        function calculateAge() {
+            const birthDate = new Date(document.getElementById('date').value);
+            const today = new Date();
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const monthDifference = today.getMonth() - birthDate.getMonth();
+
+            // Ajustar la edad si el cumpleaños aún no ha ocurrido este año
+            if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+
+            document.getElementById('age').value = age; // Actualizar el campo de edad
+        }
+
+        // Guardar cita en localStorage
+        const patientForm = document.getElementById('patientForm');
+        patientForm.addEventListener('submit', (e) => {
+            e.preventDefault();  // Prevenir recarga de la página
+
+            // Obtener los datos del formulario
+            const patientData = {
+                name: document.getElementById('name').value,
+                birthdate: document.getElementById('date').value,
+                age: document.getElementById('age').value,
+                phone: document.getElementById('phone').value,
+                email: document.getElementById('email').value,
+                insurance: document.getElementById('insurance').value,
+                insuranceNumber: document.getElementById('insuranceNumber').value,
+                doctor: document.getElementById('doctor').value,
+                appointmentDate: document.getElementById('appointmentDate').value,
+                time: document.getElementById('time').value,
+            };
+
+            // Verificar si hay citas almacenadas previamente
+            let appointments = JSON.parse(localStorage.getItem('appointments')) || [];
+
+            // Agregar la nueva cita
+            appointments.push(patientData);
+
+            // Guardar de nuevo en localStorage
+            localStorage.setItem('appointments', JSON.stringify(appointments));
+
+            // Confirmar la cita
+            alert('Cita agendada correctamente');
+
+            // Limpiar el formulario después de agendar la cita
+            patientForm.reset();
+        });
+    </script>
+</body>
+</html>

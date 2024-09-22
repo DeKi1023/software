@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Citas Agendadas</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script> <!-- Para generar PDF -->
+</head>
+<body>
+    <header>
+        <h1>Citas Agendadas</h1>
+    </header>
+
+    <main>
+        <!-- Buscar citas por fecha -->
+        <section id="searchAppointment">
+            <h2>Buscar Citas por Fecha</h2>
+            <label for="searchDate">Selecciona una fecha:</label>
+            <input type="date" id="searchDate">
+            <button onclick="filterAppointments()">Buscar</button>
+        </section>
+
+        <!-- Buscar citas por médico -->
+        <section id="searchDoctor">
+            <h2>Buscar Citas por Médico</h2>
+            <label for="doctorSelect">Selecciona un doctor:</label>
+            <select id="doctorSelect">
+                <option value="">Todos</option>
+                <option value="Dr. Juan Pérez">Dr. Juan Pérez</option>
+                <option value="Dra. Ana López">Dra. Ana López</option>
+                <option value="Dr. Carlos García">Dr. Carlos García</option>
+            </select>
+            <button onclick="filterByDoctor()">Buscar por Doctor</button>
+        </section>
+
+        <!-- Generar PDF -->
+        <section id="generatePDF">
+            <button onclick="generatePDF()">Generar PDF</button>
+        </section>
+
+        <!-- Listado de Citas -->
+        <section id="appointmentsList">
+            <h2>Listado de Citas</h2>
+            <ul id="appointments"></ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>Software para Kim &copy; 2024</p>
+    </footer>
+
+    <script>
+        // Cargar citas desde localStorage
+        let appointments = JSON.parse(localStorage.getItem('appointments')) || [];
+        const appointmentsList = document.getElementById('appointments');
+        
+        // Función para mostrar todas las citas
+        function displayAppointments(filteredAppointments) {
+            appointmentsList.innerHTML = '';  // Limpiar la lista anterior
+
+            if (filteredAppointments.length === 0) {
+                appointmentsList.innerHTML = '<li>No hay citas agendadas para esta fecha</li>';
+            } else {
+                filteredAppointments.forEach((appointment, index) => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <strong>Paciente:</strong> ${appointment.name} <br>
+                        <strong>Fecha de Nacimiento:</strong> ${appointment.birthdate} <br>
+                        <strong>Edad:</strong> ${appointment.age} <br>
+                        <strong>Doctor:</strong> ${appointment.doctor} <br>
+                        <strong>Fecha de la Cita:</strong> ${appointment.appointmentDate} <br>
+                        <strong>Hora:</strong> ${appointment.time} <br>
+                        <strong>Teléfono:</strong> ${appointment.phone} <br>
+                        <strong>Seguro Médico:</strong> ${appointment.insurance} <br>
+                        <strong>Número de Seguro:</strong> ${appointment.insuranceNumber} <br>
+                        <strong>Correo Electrónico:</strong> ${appointment.email} <br>
+                        <button onclick="deleteAppointment(${index})">Eliminar</button>
+                        <button onclick="editAppointment(${index})">Editar</button>
+                    `;
+                    appointmentsList.appendChild(li);
+                });
+            }
+        }
+
+        // Mostrar todas las citas al cargar la página
+        displayAppointments(appointments);
+
+        // Filtrar citas por fecha
+        function filterAppointments() {
+            const searchDate = document.getElementById('searchDate').value;
+            const filteredAppointments = appointments.filter(appointment => appointment.appointmentDate === searchDate);
+            displayAppointments(filteredAppointments);
+        }
+
+        // Filtrar citas por médico
+        function filterByDoctor() {
+            const selectedDoctor = document.getElementById('doctorSelect').value;
+            const filteredAppointments = selectedDoctor ? 
+                appointments.filter(appointment => appointment.doctor === selectedDoctor) : 
+                appointments;
+            displayAppointments(filteredAppointments);
+        }
+
+        // Función para eliminar una cita
+        function deleteAppointment(index) {
+            if (confirm('¿Estás seguro de eliminar esta cita?')) {
+                appointments.splice(index, 1);
+                localStorage.setItem('appointments', JSON.stringify(appointments));
+                displayAppointments(appointments);  // Actualizar la lista completa
+            }
+        }
+
+        // Función para editar una cita
+        function editAppointment(index) {
+            const appointment = appointments[index];
+            const newName = prompt("Editar Nombre", appointment.name);
+            const newDate = prompt("Editar Fecha de Nacimiento", appointment.birthdate);
+            const newPhone = prompt("Editar Teléfono", appointment.phone);
+            const newInsurance = prompt("Editar Seguro Medico", appointment.insurance);
+            const newInsuranceNumber = prompt("Editar Número de Seguro", appointment.insuranceNumber);
+            const newEmail = prompt("Editar Correo Electrónico", appointment.email);
+            const newDoctor = prompt("Editar Doctor", appointment.doctor);
+            const newAppointmentDate = prompt("Editar Fecha de Cita", appointment.appointmentDate);
+            const newTime = prompt("Editar Hora de Cita", appointment.time);
+
+            // Actualizar los datos
+            appointments[index] = {
+                ...appointment,
+                name: newName || appointment.name,
+                birthdate: newDate || appointment.birthdate,
+                phone: newPhone || appointment.phone,
+                insurance: newInsurance || appointment.insurance,
+                insuranceNumber: newInsuranceNumber || appointment.insuranceNumber,
+                email: newEmail || appointment.email,
+                doctor: newDoctor || appointment.doctor,
+                appointmentDate: newAppointmentDate || appointment.appointmentDate,
+                time: newTime || appointment.time
+            };
+
+            // Guardar las citas actualizadas en localStorage
+            localStorage.setItem('appointments', JSON.stringify(appointments));
+            displayAppointments(appointments);
+        }
+
+        // Generar PDF con citas filtradas por doctor
+        function generatePDF() {
+            const selectedDoctor = document.getElementById('doctorSelect').value;
+            const filteredAppointments = selectedDoctor ? 
+                appointments.filter(appointment => appointment.doctor === selectedDoctor) : 
+                appointments;
+
+            if (filteredAppointments.length === 0) {
+                alert('No hay citas para generar PDF');
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            let yPosition = 10;
+            filteredAppointments.forEach(appointment => {
+                doc.text(`Paciente: ${appointment.name}`, 10, yPosition);
+                doc.text(`Fecha de Cita: ${appointment.appointmentDate}`, 10, yPosition + 5);
+                doc.text(`Hora: ${appointment.time}`, 10, yPosition + 10);
+                doc.text(`Doctor: ${appointment.doctor}`, 10, yPosition + 15);
+                doc.text(`Teléfono: ${appointment.phone}`, 10, yPosition + 20);
+                yPosition += 30;
+            });
+
+            doc.save('Citas del Día.pdf');
+        }
+    </script>
+</body>
+</html>

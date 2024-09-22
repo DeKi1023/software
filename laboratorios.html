@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laboratorios</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Laboratorios</h1>
+    </header>
+
+    <main>
+        <!-- Calculadora de precios -->
+        <section id="calculator">
+            <h2>Calculadora de Precios</h2>
+            <p>Precio Total: Q<span id="totalPrice">0.00</span></p>
+            <div id="selectedLabs">
+                <h3>Laboratorios Seleccionados:</h3>
+                <ul id="selectedList"></ul>
+            </div>
+            <!-- Botón para generar PDF -->
+            <button onclick="generatePDF()">Generar PDF</button>
+        </section>
+
+        <!-- Buscar laboratorio -->
+        <section id="searchLab">
+            <label for="search">Buscar Laboratorio:</label>
+            <input type="text" id="search" oninput="filterLabs()">
+        </section>
+
+        <!-- Listado de laboratorios -->
+        <section id="labList">
+            <h2>Listado de Laboratorios</h2>
+            <ul id="labs">
+                <!-- Lista generada dinámicamente -->
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>Software para Kim &copy; 2024</p>
+    </footer>
+
+    <script>
+        const labs = [
+        { name: '	Hematología completa	'	,	price:	95	},
+{ name: '	Eritrosedimentación o VS	'	,	price:	20	},
+{ name: '	Hemoglobina (Hb) y Hematocrito (Ht)	'	,	price:	55	},
+{ name: '	Clasificación de Anemia	'	,	price:	75	},
+{ name: '	Frote Periférico con Hematólogo	'	,	price:	390	},
+{ name: '	Frote Periférico por QB (sin hematólogo)	'	,	price:	145	},
+{ name: '	Gota Gruesa	'	,	price:	85	},
+{ name: '	Recuento de Eosinófilos	'	,	price:	85	},
+{ name: '	Recuento de Reticulocitos	'	,	price:	85	},
+{ name: '	Células LE	'	,	price:	210	},
+{ name: '	Grupo y Rh	'	,	price:	50	},
+{ name: '	Coombs Indirecto	'	,	price:	110	},
+{ name: '	Coombs Directo	'	,	price:	110	},
+{ name: '	Recuento de blancos	'	,	price:	45	},
+{ name: '	T. de Protrombina (TP)	'	,	price:	50	},
+{ name: '	T. de Tromboplastina Parcial (TPT)	'	,	price:	50	},
+{ name: '	INR	'	,	price:	50	},
+{ name: '	Antitrombina III	'	,	price:	450	},
+{ name: '	Tiempo de Sangría	'	,	price:	50	},
+{ name: '	Dímero D	'	,	price:	270	},
+{ name: '	Proteína C	'	,	price:	350	},
+{ name: '	Proteína S	'	,	price:	350	},
+{ name: '	Anticoagulante Lúpico	'	,	price:	210	},
+{ name: '	Fibrinógeno	'	,	price:	110	},
+{ name: '	Factor VIII	'	,	price:	455	},
+{ name: '	Factor II	'	,	price:	455	},
+{ name: '	Factor IX	'	,	price:	455	},
+{ name: '	Factor VII	'	,	price:	455	},
+{ name: '	Factor X	'	,	price:	455	},
+{ name: '	Factor Von WillenBrand	'	,	price:	690	},
+{ name: '	Calprotectina-Lactoferrina	'	,	price:	245	},
+{ name: '	Clostridium Difficile Ag +Toxina	'	,	price:	300	},
+{ name: '	Norovirus	'	,	price:	180	},
+{ name: '	Panel de Parasitos (Ag. Giardia lamblia/ E. histolytica/ Criptosporum parvus)	'	,	price:	335	},
+{ name: '	ENTAMOEBA HISTOLYTICA DISPAR ANTIGENO	'	,	price:	190	},
+{ name: '	GIARDIA LAMBLIA ANTIGENO	'	,	price:	180	},
+{ name: '	Panel de antígenos 4 virus (Rotavirus, Adenovirus, Astrovirus, Norovirus)	'	,	price:	225	},
+{ name: '	Transferrina	'	,	price:	180	},
+{ name: '	Rotavirus/Adenovirus	'	,	price:	150	},
+{ name: '	Azul de Metileno	'	,	price:	50	},
+{ name: '	Sangre Oculta	'	,	price:	105	},
+{ name: '	Clinitest (AZUCARES REDUCTORES)	'	,	price:	115	},
+{ name: '	Heces completo	'	,	price:	50	},
+{ name: '	Antígeno H. Pylori en heces	'	,	price:	130	},
+{ name: '	Astrovirus	'	,	price:	185	},
+{ name: '	Antígeno Salmonella	'	,	price:	180	},
+{ name: '	Antígeno Shigella spp.	'	,	price:	180	},
+{ name: '	Antígeno Giardia lamblia	'	,	price:	180	},
+{ name: '	Examen de Orina Completa	'	,	price:	50	},
+{ name: '	Calcio en Orina de 24 Horas	'	,	price:	75	},
+{ name: '	Cloruros en orina al azar	'	,	price:	75	},
+{ name: '	Creatinina en Orina de 24 Horas	'	,	price:	50	},
+{ name: '	Creatinina en Orina al azar	'	,	price:	50	},
+{ name: '	Depuración de la Creatinina	'	,	price:	80	},
+{ name: '	Glucosa en Orina al Azar	'	,	price:	50	},
+{ name: '	Glucosa en Orina de 24 horas	'	,	price:	50	},
+{ name: '	CETONA EN ORINA AL AZAR	'	,	price:	50	},
+{ name: '	Microalbumina en orina al azar	'	,	price:	90	},
+{ name: '	Microalbumina en orina de 24 horas	'	,	price:	90	},
+{ name: '	Proteinas en Orina al azar	'	,	price:	90	},
+{ name: '	Proteínas en Orina de 24 horas	'	,	price:	90	},
+{ name: '	PROTEINAS DE BENCE JONES	'	,	price:	195	},
+{ name: '	Prueba de Embarazo	'	,	price:	65	},
+{ name: '	Potasio en Orina al azar	'	,	price:	65	},
+{ name: '	Potasio en Orina de 24 horas	'	,	price:	70	},
+{ name: '	Sodio en Orina al azar	'	,	price:	70	},
+{ name: '	Sodio en Orina de 24 horas	'	,	price:	70	},
+{ name: '	Acido valproico	'	,	price:	185	},
+{ name: '	Acido vanil mandelico (VMA)	'	,	price:	490	},
+{ name: '	Alcoholemia	'	,	price:	240	},
+{ name: '	Barbituratos en orina	'	,	price:	185	},
+{ name: '	Benzodiacepinas en orina	'	,	price:	185	},
+{ name: '	Carbamazepina	'	,	price:	185	},
+{ name: '	Cocaina en orina	'	,	price:	185	},
+{ name: '	Digoxina	'	,	price:	155	},
+{ name: '	Fenitoina	'	,	price:	185	},
+{ name: '	Marihuana THC en orina	'	,	price:	155	},
+{ name: '	Niveles de Vancomicina	'	,	price:	430	},
+{ name: '	Tamizaje multidrogas en orina (12 drogas)	'	,	price:	240	},
+{ name: '	Testosterona total	'	,	price:	185	},
+{ name: '	Testosterona Libre	'	,	price:	215	},
+{ name: '	Prolactina PRL	'	,	price:	145	},
+{ name: '	Progesterona P4	'	,	price:	155	},
+{ name: '	Aldosterona	'	,	price:	900	},
+{ name: '	Anti-tiroglobulina (Anti-TG)	'	,	price:	185	},
+{ name: '	Anti Microsomales (Anti-TPO)	'	,	price:	215	},
+{ name: '	Anticuerpos tiroideos (Anti-TG, Anti-TPO)	'	,	price:	305	},
+{ name: '	Curva de Insulina de 2 horas	'	,	price:	450	},
+{ name: '	Curva de Insulina de 5 horas	'	,	price:	720	},
+{ name: '	Curva de Insulina de 3 horas	'	,	price:	510	},
+{ name: '	Insulina Preprandial	'	,	price:	150	},
+{ name: '	Insulina Postprandial	'	,	price:	150	},
+{ name: '	resistencia a insulina (HOMA)	'	,	price:	210	},
+{ name: '	Dehidroepiandrosterona sulfato (DHEA-SO4)	'	,	price:	205	},
+{ name: '	Calcitonina	'	,	price:	390	},
+{ name: '	Cortisol AM	'	,	price:	150	},
+{ name: '	Cortisol PM	'	,	price:	150	},
+{ name: '	ACTH	'	,	price:	180	},
+{ name: '	Estradiol (Estrogenos)	'	,	price:	150	},
+{ name: '	Hormona Foliculo Estimulante FSH	'	,	price:	150	},
+{ name: '	HCG Beta cuantitativa (prueba de embarazo en sangre)	'	,	price:	120	},
+{ name: '	HCG Beta cualitativa (prueba de embarazo en sangre)	'	,	price:	65	},
+{ name: '	Hormona Luteinizante (LH)	'	,	price:	150	},
+{ name: '	TSH 3ra. Generación	'	,	price:	150	},
+{ name: '	Paratormona (PTH)	'	,	price:	160	},
+{ name: '	CT3	'	,	price:	100	},
+{ name: '	CT3FT4	'	,	price:	198	},
+{ name: '	Tiroglobulina (TG)	'	,	price:	265	},
+{ name: '	T3 libre (FT3)	'	,	price:	155	},
+{ name: '	T4 Libre (FT4)	'	,	price:	155	},
+{ name: '	T3 y T4	'	,	price:	200	},
+{ name: '	T3	'	,	price:	102	},
+{ name: '	T4	'	,	price:	102	},
+{ name: '	"Factor de Crecimineto insulinico(IGF1+IGFBP-3)"	'	,	price:	1495	},
+{ name: '	Hormona del crecimiento (HGH)	'	,	price:	185	},
+{ name: '	Acido fólico	'	,	price:	185	},
+{ name: '	Acido urico	'	,	price:	50	},
+{ name: '	Albumina	'	,	price:	50	},
+{ name: '	Amilasa	'	,	price:	70	},
+{ name: '	Amonio	'	,	price:	180	},
+{ name: '	Bilirrubina total, DIRECTA E INDIRECTA	'	,	price:	95	},
+{ name: '	BNP (Peptido natriuretico tipo B)	'	,	price:	360	},
+{ name: '	Calcio	'	,	price:	50	},
+{ name: '	Cloruros	'	,	price:	60	},
+{ name: '	Colesterol HDL	'	,	price:	50	},
+{ name: '	Colesterol LDL	'	,	price:	50	},
+{ name: '	Colesterol VLDL	'	,	price:	50	},
+{ name: '	Colesterol Total	'	,	price:	50	},
+{ name: '	Colinesterasa	'	,	price:	105	},
+{ name: '	CK-Total (Creatin Kinasa Total)	'	,	price:	150	},
+{ name: '	CK-MB (Creatin Kinasa Fraccion MB)	'	,	price:	150	},
+{ name: '	Ck-MM (Creatin Kinasa fracción MM)	'	,	price:	155	},
+{ name: '	Panel Cardiaco (CPK-TOTAL, CPK-MB, TROPONINA I)	'	,	price:	330	},
+{ name: '	Creatinina	'	,	price:	50	},
+{ name: '	Curva tolerancia a la glucosa 3 horas	'	,	price:	180	},
+{ name: '	Deshidrogenasa Láctica (DHL)	'	,	price:	75	},
+{ name: '	Ferritina	'	,	price:	180	},
+{ name: '	Fosfatasa alcalina	'	,	price:	60	},
+{ name: '	Fosfatasa acida prostatica	'	,	price:	95	},
+{ name: '	Fosforo	'	,	price:	75	},
+{ name: '	Gamma Glutamil Transferasa (GGT)	'	,	price:	70	},
+{ name: '	Glucosa Preprandial	'	,	price:	50	},
+{ name: '	Glucosa Postprandial	'	,	price:	50	},
+{ name: '	GLOBULINA SERICA	'	,	price:	85	},
+{ name: '	Hemoglobina Glicosilada	'	,	price:	145	},
+{ name: '	Hierro serico	'	,	price:	75	},
+{ name: '	Lipasa	'	,	price:	75	},
+{ name: '	Lípidos totales	'	,	price:	50	},
+{ name: '	Magnesio	'	,	price:	75	},
+{ name: '	Mioglobina	'	,	price:	240	},
+{ name: '	Nitrogeno de urea	'	,	price:	50	},
+{ name: '	Proteinas totales	'	,	price:	55	},
+{ name: '	Proteinas totales y Relación A/G	'	,	price:	60	},
+{ name: '	Saturación de Transferrina	'	,	price:	210	},
+{ name: '	Sodio	'	,	price:	65	},
+{ name: '	Potasio	'	,	price:	65	},
+{ name: '	Transaminasa glutámica pirúvica (TGP/ALT)	'	,	price:	75	},
+{ name: '	Transaminasa glutámica oxaloacetica (TGO/AST)	'	,	price:	75	},
+{ name: '	Transferrina	'	,	price:	215	},
+{ name: '	Trigliceridos	'	,	price:	50	},
+{ name: '	Vitamina B12	'	,	price:	215	},
+{ name: '	Vitamina D	'	,	price:	330	},
+{ name: '	Antibiograma Automatizado	'	,	price:	360	},
+{ name: '	Coprocultivo	'	,	price:	120	},
+{ name: '	COPROCULTIVO AUTOMATIZADO (CIM)	'	,	price:	300	},
+{ name: '	Cultivo de hongos	'	,	price:	180	},
+{ name: '	Cultivo de LCR	'	,	price:	180	},
+{ name: '	Cultivo de liquidos corporales	'	,	price:	180	},
+{ name: '	CULTIVO DE ESPUTO	'	,	price:	150	},
+{ name: '	Cultivo Mycobacterium tuberculosis PARA BK	'	,	price:	240	},
+{ name: '	Cultivo de secreciones varias	'	,	price:	180	},
+{ name: '	Cultivo secreciones varias automatizado	'	,	price:	450	},
+{ name: '	Cultivo de secreción uretral	'	,	price:	180	},
+{ name: '	Cultivo de secreción vaginal	'	,	price:	180	},
+{ name: '	SECRECION VAGINAL U URETRAL AUTOMATIZADA	'	,	price:	285	},
+{ name: '	CULTIVO DE SEMEN	'	,	price:	155	},
+{ name: '	CULTIVO DE SEMEN AUTOMATIZADO	'	,	price:	410	},
+{ name: '	Cultivo para Esputo (BK), lowenstein jensen	'	,	price:	240	},
+{ name: '	Frote GRAM	'	,	price:	75	},
+{ name: '	GIEMSA	'	,	price:	105	},
+{ name: '	Hemocultivo	'	,	price:	215	},
+{ name: '	HEMOCULTIVO AUTOMATIZADO	'	,	price:	270	},
+{ name: '	Cultivo de herida operatoria	'	,	price:	270	},
+{ name: '	KOH MUESTRAS VARIAS	'	,	price:	85	},
+{ name: '	Orocultivo	'	,	price:	270	},
+{ name: '	Cultivo de punta de catéter y frote GRAM	'	,	price:	120	},
+{ name: '	Tinta China (LCR)	'	,	price:	120	},
+{ name: '	Urocultivo	'	,	price:	130	},
+{ name: '	UROCULTIVO, OROCULTIVO, SEC. VARIAS AUTOMATIZADO	'	,	price:	340	},
+{ name: '	BK MUESTRAS VARIAS	'	,	price:	75	},
+{ name: '	Ziehl Neelsen (BK esputo)	'	,	price:	75	},
+{ name: '	"LIQUIDO SINOVIAL(QUIMICO: proteinas, glucosa y ácido úrico. CITOLOGICO: recuento de blancos y de rojos. MICROBIOLOGICO: cultivo y Gram)"	'	,	price:	325	},
+{ name: '	"LIQUIDO AMNIOTICO(QUIMICO: proteinas, glucosa. CITOLOGICO: recuento de blancos y de rojos. MICROBIOLOGICO: cultivo y Gram)"	'	,	price:	325	},
+{ name: '	"LIQUIDO ASCITICO/PERITONEAL (QUIMICO:proteinas, glucosa y LDH. CITOLOGICO: recuento de blancos y de rojos. MICROBIOLOGICO: cultivo y Gram)"	'	,	price:	325	},
+{ name: '	"LIQUIDO PLEURAL (QUIMICO: proteinas, glucosa y LDH. CITOLOGICO: recuento de blancos y de rojos. MICROBIOLOGICO: cultivo y Gram)"	'	,	price:	325	},
+{ name: '	"LIQUIDO CEFALORRAQUIDEO(QUIMICO: proteinas, glucosa. CITOLOGICO: recuento de blancos y de rojos. MICROBIOLOGICO: cultivo, Tinta china y Gram)"	'	,	price:	390	},
+{ name: '	"LIQUIDOS VARIOS (QUIMICO: proteinas, glucosa. CITOLOGICO: recuento de blancos y de rojos. MICROBIOLOGICO: cultivo y Gram)"	'	,	price:	325	},
+{ name: '	Ac. Antitransglutaminasa IGA/IGG	'	,	price:	360	},
+{ name: '	Ac. Anticitrulinados (ANTI CCP)	'	,	price:	300	},
+{ name: '	ANA (ACS. ANTINUCLEARES LATEX)	'	,	price:	215	},
+{ name: '	Antimulleriana	'	,	price:	720	},
+{ name: '	Anti DNA nativo	'	,	price:	270	},
+{ name: '	Anti SS A Ro	'	,	price:	230	},
+{ name: '	Anti SS B La	'	,	price:	230	},
+{ name: '	"Antifosfolipidos IgM (ANTI CARDIOLIPINA IGM)"	'	,	price:	230	},
+{ name: '	"Antifosfolipidos IgG (ANTI CARDIOLIPINA IGG)"	'	,	price:	230	},
+{ name: '	Antigliadinas IgG, IgA (GLUTEN)	'	,	price:	350	},
+{ name: '	Beta 2 glicoproteina 1 IGM	'	,	price:	275	},
+{ name: '	Beta 2 glicoproteina 1 IGG	'	,	price:	275	},
+{ name: '	calcitonina	'	,	price:	500	},
+{ name: '	Complemento C3 C4	'	,	price:	185	},
+{ name: '	C-ANCA (CR3)	'	,	price:	235	},
+{ name: '	Factor Antinuclear (FANA LATEX)	'	,	price:	150	},
+{ name: '	"Factor Antinuclear (FANA INMUNOFLOURESENCIA)"	'	,	price:	335	},
+{ name: '	Factor Reumatoideo (FR)	'	,	price:	90	},
+{ name: '	Inmunoglobulina A (IgA)	'	,	price:	145	},
+{ name: '	Inmunoglobulina G (IgG)	'	,	price:	145	},
+{ name: '	Inmunoglobulina E (IgE)	'	,	price:	145	},
+{ name: '	Inmunoglobulina M (IgM)	'	,	price:	145	},
+{ name: '	INTERLEUCINA L-6	'	,	price:	300	},
+{ name: '	Panel alérgeno alimenticio (20 parametros)	'	,	price:	1320	},
+{ name: '	Panel alérgeno inhalados (20 parametros)	'	,	price:	1320	},
+{ name: '	Panel Autoinmune (Gastro 5)	'	,	price:	740	},
+{ name: '	P-ANCA (ANTI MPO)	'	,	price:	235	},
+{ name: '	Peptido C	'	,	price:	330	},
+{ name: '	Procalcitonina	'	,	price:	370	},
+{ name: '	Proteina C reactiva (PCR)	'	,	price:	90	},
+{ name: '	Proteina C reactiva ultra sensible	'	,	price:	210	},
+{ name: '	Troponina I	'	,	price:	225	},
+{ name: '	Troponina T ULTRA SENSIBLE	'	,	price:	225	},
+{ name: '	Antigeno carcinoembrionario (CEA)	'	,	price:	185	},
+{ name: '	Alfa feto proteína	'	,	price:	215	},
+{ name: '	Antigeno prostático especifico (PSA)	'	,	price:	200	},
+{ name: '	Relación PSA libre/ PSA total	'	,	price:	336	},
+{ name: '	PSA libre	'	,	price:	230	},
+{ name: '	CA-125 (ovario)	'	,	price:	185	},
+{ name: '	CA-19-9 (gastrico hepatico)	'	,	price:	185	},
+{ name: '	CA-15-3 (mama)	'	,	price:	185	},
+{ name: '	CA-72-4 (gastrico ovarico)	'	,	price:	390	},
+{ name: '	ANTI LKMI	'	,	price:	450	},
+{ name: '	ANTI MUSCULO LISO ASMA	'	,	price:	330	},
+{ name: '	ANTI SLA	'	,	price:	300	},
+{ name: '	Ag Criptococcus neoformans (LCR/SUERO)	'	,	price:	390	},
+{ name: '	ANALISIS DE CALCULOS	'	,	price:	265	},
+{ name: '	Espermograma	'	,	price:	235	},
+{ name: '	EOSINOFILOS EN MOCO	'	,	price:	100	},
+{ name: '	Analisis de liquidos corporales	'	,	price:	330	},
+{ name: '	QUANTIFERON GOLD TB	'	,	price:	1980	},
+{ name: '	Gases arteriales	'	,	price:	450	},
+{ name: '	Virus Sincitial Respiratorio	'	,	price:	300	},
+{ name: '	Strep A test antígeno	'	,	price:	210	},
+{ name: '	PCR CARGA VIRAL CITOMEGALOVIRUS	'	,	price:	1680	},
+{ name: '	PCR CARGA VIRAL HEPATITIS  B	'	,	price:	1680	},
+{ name: '	PCR CARGA VIRAL HEPATITIS C	'	,	price:	1680	},
+{ name: '	PCR CARGA VIRAL VIH	'	,	price:	1680	},
+{ name: '	"PCR CARGA CHLAMYDIA TRACHOMATIS Y NEISSERIA GONORRHOEAE UREAPLASMA (ORINA/SECRECION)"	'	,	price:	1680	},
+{ name: '	PCR CLOSRTRIDIUM DIFFICILE	'	,	price:	1680	},
+{ name: '	"PCR MYCOBACTERIUM TUBERCULOSIS (ESPUTO LAVADO BRONCOALVEOLAR) GENE XPERT"	'	,	price:	1560	},
+{ name: '	PCR PANEL MENINGITIS (LCR)	'	,	price:	4260	},
+{ name: '	PCR PANEL NEUMONIA MICRO ARRAY	'	,	price:	4800	},
+{ name: '	"PCR PANEL GASTROINTESTINAL (HECES FRASCO ESTERIL)"	'	,	price:	3900	},
+{ name: '	"PCR PANEL RESPIRATORIO (H. NASOFARINGEO)"	'	,	price:	3900	},
+{ name: '	PCR SARS-CoV-2 / INFLUENZA A/B + VSR	'	,	price:	780	},
+{ name: '	"PCR VIRUS PAPILOMA HUMANO (VPH) (CEPILLADO CERVICO UTERINO)"	'	,	price:	1050	},
+{ name: '	Ac. Cisticerco IgM	'	,	price:	300	},
+{ name: '	Ac. Cisticerco IgG	'	,	price:	300	},
+{ name: '	ADENOVIRUS RESPIRATORIO (H. NASAL)	'	,	price:	400	},
+{ name: '	Ac. Antitreponema pallidum (IgM FTA-ABS)	'	,	price:	400	},
+{ name: '	Ac. Antitreponema pallidum (IgG FTA-ABS)	'	,	price:	400	},
+{ name: '	Ac. Chlamydia Pneumoniae IgM	'	,	price:	240	},
+{ name: '	Ac. Chlamydia Pneumoniae IgG	'	,	price:	240	},
+{ name: '	CHLAMYDIA TRACHOMATIS ACS. IGM	'	,	price:	200	},
+{ name: '	CHLAMYDIA TRACHOMATIS ACS. IGG	'	,	price:	200	},
+{ name: '	"CHLAMYDIA TRACHOMATIS ANTIGENO (HISOPADO URETRAL,VAGINAL)"	'	,	price:	260	},
+{ name: '	"AC. TOTALES TRYPANOSOMA CRUZY (CHAGS)"	'	,	price:	220	},
+{ name: '	Panel  Zika IgM/IgG + NS1	'	,	price:	360	},
+{ name: '	Antigeno Plasmodium/Malaria (paludismo)	'	,	price:	215	},
+{ name: '	Antigeno Dengue NS1	'	,	price:	150	},
+{ name: '	Antigeno Influenza A + B	'	,	price:	250	},
+{ name: '	Hepatitis B Antigeno de superficie (HBsAg)	'	,	price:	150	},
+{ name: '	Cardiolipina VDRL	'	,	price:	65	},
+{ name: '	Ac. Chinkungunya IgM	'	,	price:	220	},
+{ name: '	Citomegalovirus IgM	'	,	price:	120	},
+{ name: '	Citomegalovirus IgG	'	,	price:	120	},
+{ name: '	Citomegalovirus IgM/IGG	'	,	price:	180	},
+{ name: '	COCCIDIODES IMMITIS IGM/IGG	'	,	price:	390	},
+{ name: '	"CRYPTOCOCCUS NEOFORMANS (SUERO/LCR)"	'	,	price:	355	},
+{ name: '	Ac. Dengue IgM/IgG	'	,	price:	150	},
+{ name: '	Ac. Dengue IgM/IgG + NS1	'	,	price:	200	},
+{ name: '	EPSTEIN BARR VIRUS EVNA IGM	'	,	price:	190	},
+{ name: '	EPSTEIN BARR VIRUS EVNA IGG	'	,	price:	190	},
+{ name: '	"Epstein Barr Virus IgM II (MONOTEST/MONONUCLEOSIS)"	'	,	price:	175	},
+{ name: '	"Epstein Barr Virus IgM (MONOTEST/MONONUCLEOSIS)"	'	,	price:	175	},
+{ name: '	Ac. Helicobacter pylori IGA (sangre)	'	,	price:	190	},
+{ name: '	Ac. Helicobacter pylori IgM (sangre)	'	,	price:	190	},
+{ name: '	Ac. Helicobacter pylori IgG (sangre)	'	,	price:	190	},
+{ name: '	Hepatitis A IGG (ANTI HVA IGG)	'	,	price:	120	},
+{ name: '	Hepatitis A IGM (ANTI HVA IGM)	'	,	price:	120	},
+{ name: '	Hepatitis C (ANTI HCV)	'	,	price:	120	},
+{ name: '	Hepatitis B HbsAg (antigeno de superficie)	'	,	price:	120	},
+{ name: '	HEPATITIS B ANTICUERPOS CONTRA ANTIGENO DE SUPERFICIE (ANTI HBS) (VACUNA)	'	,	price:	180	},
+{ name: '	ANTI-EPSILON DE HEPATITIS B (HBEAC)	'	,	price:	190	},
+{ name: '	Hepatitis B Core IGM	'	,	price:	190	},
+{ name: '	Hepatitis B Core IGG	'	,	price:	190	},
+{ name: '	Herpes Simplex tipo 1 IgM	'	,	price:	120	},
+{ name: '	Herpes Simplex tipo 1 IgG	'	,	price:	120	},
+{ name: '	Herpes Simplex tipo 2 IgM	'	,	price:	120	},
+{ name: '	Herpes Simplex tipo 2 IgG	'	,	price:	120	},
+{ name: '	Herpes Simplex tipo 1 + 2  IgM/IgG	'	,	price:	210	},
+{ name: '	Hudlesson ANTICUERPOS (Brucella abortus)	'	,	price:	185	},
+{ name: '	"LEPTOSPIRA CAMPO OSCURO (ORINA ESTERIL)"	'	,	price:	300	},
+{ name: '	Ac. Leptospira IgM	'	,	price:	210	},
+{ name: '	Ac. Leptospira IgG	'	,	price:	210	},
+{ name: '	Ac. Mycoplasma Pneumoniae IgM	'	,	price:	280	},
+{ name: '	Ac. Mycoplasma Pneumoniae IgG	'	,	price:	280	},
+{ name: '	PAPERAS ANTICUERPOS IGM	'	,	price:	336	},
+{ name: '	PAPERAS ANTICUERPOS IGM	'	,	price:	335	},
+{ name: '	PARVOVIRUS B19 IGM	'	,	price:	320	},
+{ name: '	PARVOVIRUS B19 IGG	'	,	price:	320	},
+{ name: '	Rubeola IgM	'	,	price:	120	},
+{ name: '	Rubeola IgG	'	,	price:	120	},
+{ name: '	Rubeola IgM/IGG	'	,	price:	180	},
+{ name: '	SARAMPION IGM.	'	,	price:	270	},
+{ name: '	SARAMPION IGG	'	,	price:	270	},
+{ name: '	Sifilis ACS. TOTALES	'	,	price:	90	},
+{ name: '	TORCH igM	'	,	price:	180	},
+{ name: '	TORCH IgG	'	,	price:	180	},
+{ name: '	TORCH igM/IgG	'	,	price:	300	},
+{ name: '	Toxoplasma IgM	'	,	price:	120	},
+{ name: '	Toxoplasma IgG	'	,	price:	120	},
+{ name: '	Toxoplasma IgG/ IgM	'	,	price:	180	},
+{ name: '	TUBERCULOSIS ACS. TOTALES (SUERO)	'	,	price:	205	},
+{ name: '	VARICELA IGM	'	,	price:	240	},
+{ name: '	VARICELA IGG	'	,	price:	240	},
+{ name: '	WEIL FELIX (PROTEUS OX19)	'	,	price:	210	},
+{ name: '	WESTERN BLOT	'	,	price:	1140	},
+{ name: '	Widal (O yH) antigenpos febriles	'	,	price:	150	},
+{ name: '	VIH Elisa (Ab/Ag p24) CUANTIFICADO	'	,	price:	210	},
+{ name: '	VIH Prueba rápida	'	,	price:	80	},
+{ name: '	Antiestreptolisina O (ASO)	'	,	price:	90	},
+{ name: '	AG COVID 19	'	,	price:	200	},
+{ name: '	Perfil Preoperatorio (Hematologia c, TP, TPT, INR, Glucosa, Creatinina Y Bun)	'	,	price:	285	},
+{ name: '	PERFIL ELECTROLITOS        (Na, K, CL, Ca y pH)	'	,	price:	260	},
+{ name: '	Perfil Basico (Hematologia, Heces y Orina)	'	,	price:	150	},
+{ name: '	Perfil Tiroideo (T3, T4 y TSH 3ra generación)	'	,	price:	300	},
+{ name: '	Perfil Prenatal (Hematologia c, VIH, VDRL, Grupo y Rh, Heces, orina, Glucosa, TORCH igM, Hepatites B)	'	,	price:	490	},
+{ name: '	PERFIL DE TARJETA DE SALUD (HECES COMPLETO, ORINA COMPLETA, VDRL, HEPATITIS A)	'	,	price:	100	},
+{ name: '	"PERFIL DE LA MUJER (HEMATOLOGIA COMPLETA, COLESTEROL TOTAL TRIGLICERIDOS, ACIDO URICO, CREATININA, BUN, GLUCOSA PREPRANDIAL, ORINA, T3, T4 Y TSH"	'	,	price:	525	},
+{ name: '	"PERFIL DEL HOMBRE (HEMATOLOGIA COMPLETA, COLESTEROL TOTAL, TRILGICERIDOS, ACIDO URICO, CREATININA, BUN, GLUCOSA PREPRANDIAL, ORINA Y PSA TOTAL"	'	,	price:	450	},
+{ name: '	PERFIL DIABETICO (GLUCOSA PREPRANDIAL, GLUCOSA POSTPRANDIAL, HEMOGLOBINA GLICOSILADA, CREATININA Y ORINA COMPLETA)	'	,	price:	250	},
+{ name: '	PERFIL PROSTATICO  (PSA TOTAL, PSA LIBRE, RELACION PSA LIBRE/PSA TOTAL)	'	,	price:	720	},
+{ name: '	Combo recien-nacido (hematologia completa, BIL. T,D,I y Grupo Rh	'	,	price:	210	},
+{ name: '	Combo Pediatrico (HECES COMPLETO, ORINA COMPLETA, HEMATOLOGIA COMPLETA + VS Y GRUPO Rh)	'	,	price:	150	},
+{ name: '	Perfil de lipidos (Colesterol total, HDL, LDL, VLDL, Trigliceridos y Lipidos Totales)	'	,	price:	145	},
+
+        ];
+
+        const labList = document.getElementById('labs');
+        const totalPriceElement = document.getElementById('totalPrice');
+        const selectedList = document.getElementById('selectedList');
+        let totalPrice = 0;
+        let selectedLabs = [];
+
+        // Función para mostrar todos los laboratorios
+        function displayLabs(labs) {
+            labList.innerHTML = ''; // Limpiar la lista anterior
+            labs.forEach((lab, index) => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <label style="margin: 5px 0; display: block;">
+                        <input type="checkbox" value="${lab.price}" data-name="${lab.name}" onchange="updateTotal(this)"> 
+                        ${lab.name} - Q.${lab.price}
+                    </label>
+                `;
+                labList.appendChild(li);
+            });
+        }
+
+        // Mostrar los laboratorios al cargar la página
+        displayLabs(labs);
+
+        // Función para filtrar laboratorios
+        function filterLabs() {
+            const searchValue = document.getElementById('search').value.toLowerCase();
+            const filteredLabs = labs.filter(lab => lab.name.toLowerCase().includes(searchValue));
+            displayLabs(filteredLabs);
+        }
+
+        // Función para actualizar el precio total y mostrar laboratorios seleccionados
+        function updateTotal(checkbox) {
+            const price = parseFloat(checkbox.value);
+            const labName = checkbox.getAttribute('data-name');
+
+            if (checkbox.checked) {
+                totalPrice += price;
+                selectedLabs.push({ name: labName, price: price });
+                const selectedLabItem = document.createElement('li');
+                selectedLabItem.textContent = `${labName} - Q.${price}`;
+                selectedLabItem.setAttribute('data-name', labName);
+                selectedList.appendChild(selectedLabItem);
+            } else {
+                totalPrice -= price;
+                selectedLabs = selectedLabs.filter(lab => lab.name !== labName);
+                const items = selectedList.querySelectorAll('li');
+                items.forEach(item => {
+                    if (item.getAttribute('data-name') === labName) {
+                        selectedList.removeChild(item);
+                    }
+                });
+            }
+            totalPriceElement.textContent = totalPrice.toFixed(2);
+        }
+
+        // Función para generar el PDF con jsPDF
+        function generatePDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            doc.setFontSize(14);
+            doc.text("Laboratorios Seleccionados", 10, 10);
+
+            let yOffset = 20;
+            selectedLabs.forEach(lab => {
+                doc.setFontSize(12);
+                doc.text(`${lab.name} - Q.${lab.price}`, 10, yOffset);
+                yOffset += 10;
+            });
+
+            doc.setFontSize(12);
+            doc.text(`Precio Total: Q.${totalPrice.toFixed(2)}`, 10, yOffset + 10);
+
+            doc.save("Cotizacion de Laboratorios.pdf");
+        }
+    </script>
+</body>
+</html>
